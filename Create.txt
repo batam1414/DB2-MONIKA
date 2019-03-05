@@ -1,0 +1,173 @@
+DROP TABLE course CASCADE CONSTRAINTS;
+DROP TABLE zipcode CASCADE CONSTRAINTS;
+DROP TABLE instructor CASCADE CONSTRAINTS;
+DROP TABLE section CASCADE CONSTRAINTS;
+DROP TABLE student CASCADE CONSTRAINTS;
+DROP TABLE enrollment CASCADE CONSTRAINTS;
+DROP TABLE grade_type CASCADE CONSTRAINTS;
+DROP TABLE grade_type_weight CASCADE CONSTRAINTS;
+DROP TABLE grade CASCADE CONSTRAINTS;
+DROP TABLE grade_conversion CASCADE CONSTRAINTS;
+
+
+CREATE TABLE course (
+	course_no NUMBER(8,0) NOT NULL PRIMARY KEY,
+	description VARCHAR2(50),
+	cost NUMBER(9,2),
+	prerequisite NUMBER(8,0),
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT prerequisite_fk FOREIGN KEY (prerequisite)
+    REFERENCES course(course_no)
+);
+
+CREATE TABLE zipcode (
+	zip VARCHAR(5) NOT NULL PRIMARY KEY,
+	city VARCHAR(25),
+	state VARCHAR(2),
+	reated_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL
+);
+
+CREATE TABLE instructor (
+	instructor_id NUMBER(8) NOT NULL PRIMARY KEY,
+	salutation VARCHAR2(5),
+	first_name VARCHAR2(25),
+	last_name VARCHAR2(25),
+	street_address VARCHAR2(50), 
+	zip VARCHAR2(5),
+	phone VARCHAR2(15), 
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT instructor_zip_fk FOREIGN KEY (zip)
+    REFERENCES zipcode(zip)
+);
+
+CREATE TABLE section (
+	section_id NUMBER(8,0) NOT NULL PRIMARY KEY,
+	course_no NUMBER(8,0) NOT NULL,
+	section_no NUMBER(3) NOT NULL,
+	start_date_time DATE,
+	location VARCHAR2(50),
+	instructor_id NUMBER(8,0) NOT NULL,
+	capacity NUMBER(3,0),
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT section_course_no_fk FOREIGN KEY (course_no)
+    REFERENCES course(course_no),
+    CONSTRAINT section_instructor_id_fk FOREIGN KEY (instructor_id)
+    REFERENCES instructor(instructor_id)
+);
+
+CREATE TABLE student (
+	student_id NUMBER(8,0) NOT NULL PRIMARY KEY,
+	salutation VARCHAR2(5),
+	first_name VARCHAR2(25),
+	last_name VARCHAR2(25) NOT NULL,
+	street_address VARCHAR2(50),
+	zip VARCHAR2(5) NOT NULL,
+	phone VARCHAR2(15),
+	employer VARCHAR2(50),
+	registration_date DATE NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT student_zip_fk FOREIGN KEY (zip)
+    REFERENCES zipcode(zip)
+);
+
+CREATE TABLE enrollment (
+	student_id NUMBER(8,0) NOT NULL,
+	section_id NUMBER(8,0) NOT NULL,
+	enroll_date DATE NOT NULL,
+	final_grade NUMBER(3,0) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT enrollment_student_id_fk FOREIGN KEY (student_id)
+    REFERENCES student(student_id),
+    CONSTRAINT enrollment_section_id_fk FOREIGN KEY (section_id)
+    REFERENCES section(section_id),
+	CONSTRAINT enrollment_id PRIMARY KEY(student_id, section_id)
+);
+
+CREATE TABLE grade_type (
+	grade_type_code CHAR(2) NOT NULL PRIMARY KEY,
+	description VARCHAR2(50) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL
+);
+
+CREATE TABLE grade_type_weight (
+	section_id NUMBER(8) NOT NULL,
+	grade_type_code CHAR(2) NOT NULL,
+	number_per_section NUMBER(3) NOT NULL,
+	percent_of_final NUMBER(3) NOT NULL,
+	drop_lowest CHAR(1) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT g_ty_we_section_id_fk FOREIGN KEY (section_id)
+    REFERENCES section(section_id),
+    CONSTRAINT g_ty_we_g_type_code_fk FOREIGN KEY (grade_type_code)
+    REFERENCES grade_type(grade_type_code),
+	CONSTRAINT grade_type_weight_id PRIMARY KEY(section_id, grade_type_code)
+);
+
+CREATE TABLE grade (
+	student_id NUMBER(8,0) NOT NULL,
+	section_id NUMBER(8,0) NOT NULL,
+	grade_type_code CHAR(2) NOT NULL,
+	grade_code_occurence NUMBER(38) NOT NULL,
+	numeric_grade Number(3) NOT NULL,
+	comments VARCHAR2(2000),
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+    CONSTRAINT grade_student_id_fk FOREIGN KEY (student_id)
+    REFERENCES student(student_id),
+    CONSTRAINT grade_section_id_fk FOREIGN KEY (section_id)
+    REFERENCES section(section_id),
+    CONSTRAINT grade_grade_type_code_fk FOREIGN KEY (grade_type_code)
+    REFERENCES grade_type(grade_type_code),
+	CONSTRAINT grade_id PRIMARY KEY(student_id, section_id, grade_type_code, 
+                                    grade_code_occurence)
+);
+
+CREATE TABLE grade_conversion (
+	letter_grade VARCHAR(2) NOT NULL PRIMARY KEY,
+	grade_point NUMBER(3,2) NOT NULL,
+	max_grade NUMBER(3) NOT NULL,
+	min_grade NUMBER(3) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL
+);
+
+
+
+
+
+
+
+
+
+
+
+
+.
