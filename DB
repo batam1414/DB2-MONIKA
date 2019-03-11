@@ -1,0 +1,972 @@
+DROP TABLE course CASCADE CONSTRAINTS;
+DROP TABLE zipcode CASCADE CONSTRAINTS;
+DROP TABLE instructor CASCADE CONSTRAINTS;
+DROP TABLE section CASCADE CONSTRAINTS;
+DROP TABLE student CASCADE CONSTRAINTS;
+DROP TABLE enrollment CASCADE CONSTRAINTS;
+DROP TABLE grade_type CASCADE CONSTRAINTS;
+DROP TABLE grade_type_weight CASCADE CONSTRAINTS;
+DROP TABLE grade CASCADE CONSTRAINTS;
+DROP TABLE grade_conversion CASCADE CONSTRAINTS;
+
+
+CREATE TABLE course (
+	course_no NUMBER(8,0) NOT NULL PRIMARY KEY,
+	description VARCHAR2(50),
+	cost NUMBER(9,2),
+	prerequisite NUMBER(8,0),
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT prerequisite_fk FOREIGN KEY (prerequisite)
+    REFERENCES course(course_no)
+);
+
+CREATE TABLE zipcode (
+	zip VARCHAR(5) NOT NULL PRIMARY KEY,
+	city VARCHAR(25),
+	state VARCHAR(2),
+	reated_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL
+);
+
+CREATE TABLE instructor (
+	instructor_id NUMBER(8) NOT NULL PRIMARY KEY,
+	salutation VARCHAR2(5),
+	first_name VARCHAR2(25),
+	last_name VARCHAR2(25),
+	street_address VARCHAR2(50), 
+	zip VARCHAR2(5),
+	phone VARCHAR2(15), 
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT instructor_zip_fk FOREIGN KEY (zip)
+    REFERENCES zipcode(zip)
+);
+
+CREATE TABLE section (
+	section_id NUMBER(8,0) NOT NULL PRIMARY KEY,
+	course_no NUMBER(8,0) NOT NULL,
+	section_no NUMBER(3) NOT NULL,
+	start_date_time DATE,
+	location VARCHAR2(50),
+	instructor_id NUMBER(8,0) NOT NULL,
+	capacity NUMBER(3,0),
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT section_course_no_fk FOREIGN KEY (course_no)
+    REFERENCES course(course_no),
+    CONSTRAINT section_instructor_id_fk FOREIGN KEY (instructor_id)
+    REFERENCES instructor(instructor_id)
+);
+
+CREATE TABLE student (
+	student_id NUMBER(8,0) NOT NULL PRIMARY KEY,
+	salutation VARCHAR2(5),
+	first_name VARCHAR2(25),
+	last_name VARCHAR2(25) NOT NULL,
+	street_address VARCHAR2(50),
+	zip VARCHAR2(5) NOT NULL,
+	phone VARCHAR2(15),
+	employer VARCHAR2(50),
+	registration_date DATE NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT student_zip_fk FOREIGN KEY (zip)
+    REFERENCES zipcode(zip)
+);
+
+CREATE TABLE enrollment (
+	student_id NUMBER(8,0) NOT NULL,
+	section_id NUMBER(8,0) NOT NULL,
+	enroll_date DATE NOT NULL,
+	final_grade NUMBER(3,0) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT enrollment_student_id_fk FOREIGN KEY (student_id)
+    REFERENCES student(student_id),
+    CONSTRAINT enrollment_section_id_fk FOREIGN KEY (section_id)
+    REFERENCES section(section_id),
+	CONSTRAINT enrollment_id PRIMARY KEY(student_id, section_id)
+);
+
+CREATE TABLE grade_type (
+	grade_type_code CHAR(2) NOT NULL PRIMARY KEY,
+	description VARCHAR2(50) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL
+);
+
+CREATE TABLE grade_type_weight (
+	section_id NUMBER(8) NOT NULL,
+	grade_type_code CHAR(2) NOT NULL,
+	number_per_section NUMBER(3) NOT NULL,
+	percent_of_final NUMBER(3) NOT NULL,
+	drop_lowest CHAR(1) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+	CONSTRAINT g_ty_we_section_id_fk FOREIGN KEY (section_id)
+    REFERENCES section(section_id),
+    CONSTRAINT g_ty_we_g_type_code_fk FOREIGN KEY (grade_type_code)
+    REFERENCES grade_type(grade_type_code),
+	CONSTRAINT grade_type_weight_id PRIMARY KEY(section_id, grade_type_code)
+);
+
+CREATE TABLE grade (
+	student_id NUMBER(8,0) NOT NULL,
+	section_id NUMBER(8,0) NOT NULL,
+	grade_type_code CHAR(2) NOT NULL,
+	grade_code_occurence NUMBER(38) NOT NULL,
+	numeric_grade Number(3) NOT NULL,
+	comments VARCHAR2(2000),
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL,
+    CONSTRAINT grade_student_id_fk FOREIGN KEY (student_id)
+    REFERENCES student(student_id),
+    CONSTRAINT grade_section_id_fk FOREIGN KEY (section_id)
+    REFERENCES section(section_id),
+    CONSTRAINT grade_grade_type_code_fk FOREIGN KEY (grade_type_code)
+    REFERENCES grade_type(grade_type_code),
+	CONSTRAINT grade_id PRIMARY KEY(student_id, section_id, grade_type_code, 
+                                    grade_code_occurence)
+);
+
+CREATE TABLE grade_conversion (
+	letter_grade VARCHAR(2) NOT NULL PRIMARY KEY,
+	grade_point NUMBER(3,2) NOT NULL,
+	max_grade NUMBER(3) NOT NULL,
+	min_grade NUMBER(3) NOT NULL,
+	created_by VARCHAR2(30) NOT NULL,
+	created_date DATE NOT NULL,
+	modified_by VARCHAR2(30) NOT NULL,
+	modified_date DATE NOT NULL
+);
+
+
+
+Populate the table:
+
+INSERT INTO grade_type
+( 
+grade_type_code,
+description,
+created_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ 'A',
+ 'Type of code',
+ 'Sarah', 
+ TO_DATE('14-NOV-2014','DD-MON-YYYY'), 
+ 'Lolly', 
+ TO_DATE('11-OCT-2017','DD-MON-YYYY')
+);
+
+
+INSERT INTO grade_type
+( 
+grade_type_code,
+description,
+created_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ 'B',
+ '10',
+ 'Anna', 
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'), 
+ 'Lorand', 
+ TO_DATE('11-OCT-2018','DD-MON-YYYY')
+);
+
+INSERT INTO grade_type
+( 
+grade_type_code,
+description,
+created_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ 'C',
+ 'Type of code',
+ 'Anna', 
+ TO_DATE('14-NOV-2016','DD-MON-YYYY'), 
+ 'Lol', 
+ TO_DATE('11-OCT-2017','DD-MON-YYYY')
+);
+
+INSERT INTO grade_type
+( 
+grade_type_code,
+description,
+created_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ 'D',
+ 'Type of code',
+ 'Bungie', 
+ TO_DATE('14-NOV-2016','DD-MON-YYYY'), 
+ 'Trice', 
+ TO_DATE('11-DEC-2017','DD-MON-YYYY')
+);
+
+INSERT INTO grade_type
+( 
+grade_type_code,
+description,
+created_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ 'E',
+ 'Type',
+ 'Bob', 
+ TO_DATE('14-NOV-2016','DD-MON-YYYY'), 
+ 'Clara', 
+ TO_DATE('30-DEC-2017','DD-MON-YYYY')
+);
+
+
+INSERT INTO zipcode
+( 
+zip,
+city,
+state,
+reated_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ '1',
+ 'Timisoara',
+ 'TM',
+ '2',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'B',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+);
+
+
+INSERT INTO zipcode
+( 
+zip,
+city,
+state,
+reated_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ '2',
+ 'Timisoara',
+ 'TM',
+ '2',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ '5',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+);
+
+INSERT INTO zipcode
+( 
+zip
+city,
+state,
+reated_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ '1',
+ 'Timisoara',
+ 'TM',
+ '2',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'B',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+);
+
+INSERT INTO zipcode
+( 
+zip,
+city,
+state,
+reated_by,
+created_date,
+modified_by,
+modified_date
+)
+VALUES
+( 
+ '4',
+ 'Timisoara',
+ 'TM',
+ '3',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ '9',
+ TO_DATE('15-NOV-2018','DD-MON-YYYY')
+);
+
+
+insert into grade_conversion (
+	letter_grade,
+	grade_point,
+	max_grade,
+	min_grade,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES('2', '7','10','1','B',TO_DATE('14-NOV-2018','DD-MON-YYYY'),'C',
+TO_DATE('14-NOV-2018','DD-MON-YYYY'))
+;
+
+insert into grade_conversion (
+	letter_grade,
+	grade_point,
+	max_grade,
+	min_grade,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES('1', '7','10','1','B',TO_DATE('14-NOV-2018','DD-MON-YYYY'),'A',
+TO_DATE('14-NOV-2018','DD-MON-YYYY'))
+;
+
+insert into grade_conversion (
+	letter_grade,
+	grade_point,
+	max_grade,
+	min_grade,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES('3', '7','10','1','B',TO_DATE('14-NOV-2018','DD-MON-YYYY'),'B',
+TO_DATE('14-NOV-2018','DD-MON-YYYY'))
+;
+
+insert into grade_conversion (
+	letter_grade,
+	grade_point,
+	max_grade,
+	min_grade,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES('4', '7','10','1','B',TO_DATE('14-NOV-2018','DD-MON-YYYY'),'D',
+TO_DATE('14-NOV-2018','DD-MON-YYYY'))
+;
+
+insert into grade_conversion (
+	letter_grade,
+	grade_point,
+	max_grade,
+	min_grade,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES('5', '7','10','1','B',TO_DATE('14-NOV-2018','DD-MON-YYYY'),'E',
+TO_DATE('14-NOV-2018','DD-MON-YYYY'))
+;
+
+insert into course (
+	course_no,
+	description,
+	cost,
+	prerequisite,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date)
+	VALUES
+( 
+ '2',
+ 'Free',
+ '7',
+ '2',
+ 'Me',
+  TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Bee',
+ TO_DATE('11-NOV-2018','DD-MON-YYYY'));
+
+insert into course (
+	course_no,
+	description,
+	cost,
+	prerequisite,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date)
+	VALUES
+( 
+ '1',
+ 'Maths',
+ '7',
+ '1',
+ 'Bob',
+  TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Bee',
+ TO_DATE('11-NOV-2018','DD-MON-YYYY'));
+
+insert into course (
+	course_no,
+	description,
+	cost,
+	prerequisite,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date)
+	VALUES
+( 
+ '3',
+ 'Info',
+ '7',
+ '3',
+ 'George',
+  TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Blueber',
+ TO_DATE('11-NOV-2018','DD-MON-YYYY'));
+
+insert into course (
+	course_no,
+	description,
+	cost,
+	prerequisite,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date)
+	VALUES
+( 
+ '4',
+ 'Physics',
+ '7',
+ '4',
+ 'Billy',
+  TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Grey',
+ TO_DATE('11-NOV-2018','DD-MON-YYYY'));
+
+insert into course (
+	course_no,
+	description,
+	cost,
+	prerequisite,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date)
+	VALUES
+( 
+ '5',
+ 'Physics',
+ '7',
+ '5',
+ 'Phill',
+  TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Lala',
+ TO_DATE('11-NOV-2018','DD-MON-YYYY'));
+
+
+
+insert into instructor (
+	instructor_id,
+	salutation,
+	first_name,
+	last_name,
+	street_address, 
+	zip,
+	phone, 
+	created_by,
+	created_date,
+	modified_by,
+	modified_date 
+)
+VALUES(
+ '1',
+ 'Hi',
+ 'John',
+ 'Bob',
+ 'Nowhere',
+ '1',
+ '0740980946',
+ 'Me',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Noname',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into instructor (
+	instructor_id,
+	salutation,
+	first_name,
+	last_name,
+	street_address, 
+	zip,
+	phone, 
+	created_by,
+	created_date,
+	modified_by,
+	modified_date 
+)
+VALUES(
+ '2',
+ 'Bye',
+ 'Johnny',
+ 'Gates',
+ 'Wallstreet',
+ '2',
+ '0740980123',
+ 'Nany',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Flyeer',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into instructor (
+	instructor_id,
+	salutation,
+	first_name,
+	last_name,
+	street_address, 
+	zip,
+	phone, 
+	created_by,
+	created_date,
+	modified_by,
+	modified_date 
+)
+VALUES(
+ '3',
+ 'Hallo',
+ 'Fill',
+ 'Nuts',
+ 'Blink',
+ '3',
+ '0741234567',
+ 'Nana',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Fly',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into instructor (
+	instructor_id,
+	salutation,
+	first_name,
+	last_name,
+	street_address, 
+	zip,
+	phone, 
+	created_by,
+	created_date,
+	modified_by,
+	modified_date 
+)
+VALUES(
+ '4',
+ 'Groot',
+ 'Find',
+ 'Grapes',
+ 'Darkside',
+ '4',
+ '0746543217',
+ 'Nancy',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Groot',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into instructor (
+	instructor_id,
+	salutation,
+	first_name,
+	last_name,
+	street_address, 
+	zip,
+	phone, 
+	created_by,
+	created_date,
+	modified_by,
+	modified_date 
+)
+VALUES(
+ '5',
+ 'Howdy',
+ 'Goss',
+ 'Parker',
+ 'Whiteside',
+ '5',
+ '0436543217',
+ 'None',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Gilly',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+
+insert into section (
+	section_id,
+	course_no,
+	section_no,
+	start_date_time,
+	location,
+	instructor_id,
+	capacity,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES(
+ '1',
+ '2',
+ '4',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'London',
+ '5',
+ '1',
+ 'You',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Rose',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into section (
+	section_id,
+	course_no,
+	section_no,
+	start_date_time,
+	location,
+	instructor_id,
+	capacity,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES(
+ '2',
+ '2',
+ '4',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'BigBen',
+ '2',
+ '1',
+ 'You',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Rose',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into section (
+	section_id,
+	course_no,
+	section_no,
+	start_date_time,
+	location,
+	instructor_id,
+	capacity,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES(
+ '3',
+ '2',
+ '4',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'New York',
+ '3',
+ '1',
+ 'You',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Rose',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into section (
+	section_id,
+	course_no,
+	section_no,
+	start_date_time,
+	location,
+	instructor_id,
+	capacity,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES(
+ '4',
+ '2',
+ '4',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Kentucky',
+ '4',
+ '1',
+ 'You',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Rose',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+insert into section (
+	section_id,
+	course_no,
+	section_no,
+	start_date_time,
+	location,
+	instructor_id,
+	capacity,
+	created_by,
+	created_date,
+	modified_by,
+	modified_date
+)
+VALUES(
+ '5',
+ '2',
+ '4',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Kiel',
+ '5',
+ '1',
+ 'Browny',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY'),
+ 'Greeny',
+ TO_DATE('14-NOV-2018','DD-MON-YYYY')
+
+);
+
+
+
+ INSERT INTO STUDENT(STUDENT_ID, SALUTATION, FIRST_NAME,
+ LAST_NAME, STREET_ADDRESS, ZIP, PHONE, EMPLOYER, 
+REGISTRATION_DATE, CREATED_BY, CREATED_DATE, MODIFIED_BY,
+ MODIFIED_DATE) VALUES (5, 'Mr', 'Robin', 'Hood', 
+'Forest street 127', '1', '+40793300629', 'Hella', 
+TO_DATE('11/06/2016','DD/MM/YYYY'), 'Mary', 
+TO_DATE('13/07/2017','DD/MM/YYYY'), 'John', 
+TO_DATE('23/11/2018','DD/MM/YYYY'));
+
+INSERT INTO STUDENT(STUDENT_ID, SALUTATION, FIRST_NAME,
+ LAST_NAME, STREET_ADDRESS, ZIP, PHONE, EMPLOYER, 
+REGISTRATION_DATE, CREATED_BY, CREATED_DATE, MODIFIED_BY,
+ MODIFIED_DATE) VALUES (1, 'Mr', 'John', 'Hoody', 
+'Shaking street 117', '2', '+40793300629', 'Bosch', 
+TO_DATE('11/06/2016','DD/MM/YYYY'), 'Marian', 
+TO_DATE('13/07/2017','DD/MM/YYYY'), 'Liege', 
+TO_DATE('23/11/2018','DD/MM/YYYY'));
+
+
+INSERT INTO STUDENT(STUDENT_ID, SALUTATION, FIRST_NAME,
+ LAST_NAME, STREET_ADDRESS, ZIP, PHONE, EMPLOYER, 
+REGISTRATION_DATE, CREATED_BY, CREATED_DATE, MODIFIED_BY,
+ MODIFIED_DATE) VALUES (2, 'Mrs', 'Sarah', 'Horn', 
+'Blue street 2', '3', '+40989766553', 'Nokia', 
+TO_DATE('11/06/2016','DD/MM/YYYY'), 'George', 
+TO_DATE('13/07/2017','DD/MM/YYYY'), 'Lars', 
+TO_DATE('23/11/2018','DD/MM/YYYY'));
+
+
+INSERT INTO STUDENT(STUDENT_ID, SALUTATION, FIRST_NAME,
+ LAST_NAME, STREET_ADDRESS, ZIP, PHONE, EMPLOYER, 
+REGISTRATION_DATE, CREATED_BY, CREATED_DATE, MODIFIED_BY,
+ MODIFIED_DATE) VALUES (3, 'Mrs', 'Klara', 'Bill', 
+'No name street 2', '4', '+4098456233', 'Visma', 
+TO_DATE('11/06/2016','DD/MM/YYYY'), 'Gilly', 
+TO_DATE('13/07/2017','DD/MM/YYYY'), 'Lara', 
+TO_DATE('23/11/2018','DD/MM/YYYY'));
+
+INSERT INTO STUDENT(STUDENT_ID, SALUTATION, FIRST_NAME,
+ LAST_NAME, STREET_ADDRESS, ZIP, PHONE, EMPLOYER, 
+REGISTRATION_DATE, CREATED_BY, CREATED_DATE, MODIFIED_BY,
+ MODIFIED_DATE) VALUES (4, 'Mr', 'Klug', 'Not', 
+'Happy street 2', '5', '+4111456233', 'Movidius', 
+TO_DATE('11/06/2016','DD/MM/YYYY'), 'Grow', 
+TO_DATE('13/07/2017','DD/MM/YYYY'), 'Olga', 
+TO_DATE('23/11/2018','DD/MM/YYYY'));
+
+
+
+
+ INSERT INTO ENROLLMENT(STUDENT_ID, SECTION_ID, 
+ENROLL_DATE, FINAL_GRADE, CREATED_BY, CREATED_DATE,
+ MODIFIED_BY, MODIFIED_DATE) VALUES (1, 1, 
+TO_DATE('09/10/1990','DD/MM/YYYY'), 1, 'Mike', 
+TO_DATE('19/10/2000','DD/MM/YYYY'), 'John', 
+TO_DATE('19/10/2002','DD/MM/YYYY'));
+
+ INSERT INTO ENROLLMENT(STUDENT_ID, SECTION_ID, 
+ENROLL_DATE, FINAL_GRADE, CREATED_BY, CREATED_DATE,
+ MODIFIED_BY, MODIFIED_DATE) VALUES (2, 2, 
+TO_DATE('09/10/1990','DD/MM/YYYY'), 2, 'Mik', 
+TO_DATE('19/10/2000','DD/MM/YYYY'), 'Ion', 
+TO_DATE('19/10/2002','DD/MM/YYYY'));
+
+ INSERT INTO ENROLLMENT(STUDENT_ID, SECTION_ID, 
+ENROLL_DATE, FINAL_GRADE, CREATED_BY, CREATED_DATE,
+ MODIFIED_BY, MODIFIED_DATE) VALUES (3, 3, 
+TO_DATE('09/10/1990','DD/MM/YYYY'), 3, 'Mi', 
+TO_DATE('19/10/2000','DD/MM/YYYY'), 'Nars', 
+TO_DATE('19/10/2002','DD/MM/YYYY'));
+
+ INSERT INTO ENROLLMENT(STUDENT_ID, SECTION_ID, 
+ENROLL_DATE, FINAL_GRADE, CREATED_BY, CREATED_DATE,
+ MODIFIED_BY, MODIFIED_DATE) VALUES (4, 4, 
+TO_DATE('09/10/1990','DD/MM/YYYY'), 4, 'Nala', 
+TO_DATE('19/10/2000','DD/MM/YYYY'), 'Lota', 
+TO_DATE('19/10/2002','DD/MM/YYYY'));
+
+ INSERT INTO ENROLLMENT(STUDENT_ID, SECTION_ID, 
+ENROLL_DATE, FINAL_GRADE, CREATED_BY, CREATED_DATE,
+ MODIFIED_BY, MODIFIED_DATE) VALUES (5, 5, 
+TO_DATE('09/10/1990','DD/MM/YYYY'), 5, 'Steve', 
+TO_DATE('19/10/2000','DD/MM/YYYY'), 'York', 
+TO_DATE('19/10/2002','DD/MM/YYYY'));
+
+
+
+
+
+INSERT INTO GRADE(STUDENT_ID, SECTION_ID,
+ GRADE_TYPE_CODE, GRADE_CODE_OCCURENCE, 
+NUMERIC_GRADE, COMMENTS, CREATED_BY, CREATED_DATE, 
+MODIFIED_BY, MODIFIED_DATE) VALUES (1, 1,'A', 1, 
+10, 'Bad uh', 'John', TO_DATE('08/07/2017','DD/MM/YYYY'), 
+'Brian', TO_DATE('19/02/2018', 'DD/MM/YYYY'));
+
+INSERT INTO GRADE(STUDENT_ID, SECTION_ID,
+ GRADE_TYPE_CODE, GRADE_CODE_OCCURENCE, 
+NUMERIC_GRADE, COMMENTS, CREATED_BY, CREATED_DATE, 
+MODIFIED_BY, MODIFIED_DATE) VALUES (2, 2,'B', 2, 
+11, 'Good uh', 'John', TO_DATE('08/07/2017','DD/MM/YYYY'), 
+'Brian', TO_DATE('19/02/2018', 'DD/MM/YYYY'));
+
+INSERT INTO GRADE(STUDENT_ID, SECTION_ID,
+ GRADE_TYPE_CODE, GRADE_CODE_OCCURENCE, 
+NUMERIC_GRADE, COMMENTS, CREATED_BY, CREATED_DATE, 
+MODIFIED_BY, MODIFIED_DATE) VALUES (3, 3,'C', 3, 
+12, 'Sad uh', 'John', TO_DATE('08/07/2017','DD/MM/YYYY'), 
+'Brian', TO_DATE('19/02/2018', 'DD/MM/YYYY'));
+
+INSERT INTO GRADE(STUDENT_ID, SECTION_ID,
+ GRADE_TYPE_CODE, GRADE_CODE_OCCURENCE, 
+NUMERIC_GRADE, COMMENTS, CREATED_BY, CREATED_DATE, 
+MODIFIED_BY, MODIFIED_DATE) VALUES (4, 4,'D', 4, 
+13, 'Bored uh', 'John', TO_DATE('08/07/2017','DD/MM/YYYY'), 
+'Brian', TO_DATE('19/02/2018', 'DD/MM/YYYY'));
+
+INSERT INTO GRADE(STUDENT_ID, SECTION_ID,
+ GRADE_TYPE_CODE, GRADE_CODE_OCCURENCE, 
+NUMERIC_GRADE, COMMENTS, CREATED_BY, CREATED_DATE, 
+MODIFIED_BY, MODIFIED_DATE) VALUES (5, 5,'D', 5, 
+14, 'Delighted uh', 'John', TO_DATE('08/07/2017','DD/MM/YYYY'), 
+'Brian', TO_DATE('19/02/2018', 'DD/MM/YYYY'));
+
+
+
+
+INSERT INTO GRADE_TYPE_WEIGHT (SECTION_ID, 
+GRADE_TYPE_CODE, NUMBER_PER_SECTION, PERCENT_OF_FINAL,
+ DROP_LOWEST, CREATED_BY, CREATED_DATE, MODIFIED_BY, MODIFIED_DATE)
+ VALUES (1, 'A', 1, 50, 'N', 'Mike', TO_DATE('21/10/2017', 
+'DD/MM/YYYY'), 'John', TO_DATE('15/06/2018','DD/MM/YYYY'));
+
+INSERT INTO GRADE_TYPE_WEIGHT (SECTION_ID, 
+GRADE_TYPE_CODE, NUMBER_PER_SECTION, PERCENT_OF_FINAL,
+ DROP_LOWEST, CREATED_BY, CREATED_DATE, MODIFIED_BY, MODIFIED_DATE)
+ VALUES (2, 'B', 2, 50, 'N', 'Mike', TO_DATE('21/10/2017', 
+'DD/MM/YYYY'), 'John', TO_DATE('15/06/2018','DD/MM/YYYY'));
+
+INSERT INTO GRADE_TYPE_WEIGHT (SECTION_ID, 
+GRADE_TYPE_CODE, NUMBER_PER_SECTION, PERCENT_OF_FINAL,
+ DROP_LOWEST, CREATED_BY, CREATED_DATE, MODIFIED_BY, MODIFIED_DATE)
+ VALUES (3, 'C', 3, 50, 'N', 'Mike', TO_DATE('21/10/2017', 
+'DD/MM/YYYY'), 'John', TO_DATE('15/06/2018','DD/MM/YYYY'));
+
+INSERT INTO GRADE_TYPE_WEIGHT (SECTION_ID, 
+GRADE_TYPE_CODE, NUMBER_PER_SECTION, PERCENT_OF_FINAL,
+ DROP_LOWEST, CREATED_BY, CREATED_DATE, MODIFIED_BY, MODIFIED_DATE)
+ VALUES (4, 'D', 4, 50, 'N', 'Molly', TO_DATE('21/10/2017', 
+'DD/MM/YYYY'), 'John', TO_DATE('15/06/2018','DD/MM/YYYY'));
+
+INSERT INTO GRADE_TYPE_WEIGHT (SECTION_ID, 
+GRADE_TYPE_CODE, NUMBER_PER_SECTION, PERCENT_OF_FINAL,
+ DROP_LOWEST, CREATED_BY, CREATED_DATE, MODIFIED_BY, MODIFIED_DATE)
+ VALUES (5, 'E', 5, 30, 'N', 'Torry', TO_DATE('21/10/2017', 
+'DD/MM/YYYY'), 'John', TO_DATE('15/06/2018','DD/MM/YYYY'));
+
+
+
+select * from grade_type
+select * from zipcode
+select * from grade_conversion
+select * from course
+select * from instructor
+select * from section
+select * from student
+select * from enrollment
+select * from grade
+select * from grade_type_weight
